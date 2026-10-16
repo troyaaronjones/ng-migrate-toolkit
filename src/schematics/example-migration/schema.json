@@ -1,0 +1,1 @@
+{"$id":"example-migration","$schema":"http://json-schema.org/schema","properties":{"dryRun":{"default":false,"description":"Report what would change without writing files.","type":"boolean"}},"required":[],"title":"Example migration options","type":"object"}

@@ -1,0 +1,1 @@
+{"$id":"detect-deprecated","$schema":"http://json-schema.org/schema","properties":{"report":{"default":true,"description":"Write migration-report.json into the project.","type":"boolean"}},"required":[],"title":"Detect deprecated options","type":"object"}
