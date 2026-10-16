@@ -1,41 +1,60 @@
 /**
- * example-migration — TEMPLATE. Copy this directory to start a real codemod.
+ * example-migration schematic — codemod demonstrating automated API migration.
  *
- * A migration schematic typically:
- *   1. Reads source files from the Tree
- *   2. Applies a transformation (string edit for simple cases; an AST
- *      transform via ts-morph/recast for anything structural)
- *   3. Overwrites the files and logs what changed
- *   4. Is idempotent — running it twice changes nothing the second time
+ * Replaces deprecated `TestBed.get(...)` calls with `TestBed.inject(...)`.
  *
- * See docs/adding-a-codemod.md for the full playbook.
+ * Rules followed by this schematic:
+ *   1. Reads source files from the virtual Tree
+ *   2. Applies a transformation (replacing `TestBed.get` with `TestBed.inject`)
+ *   3. Overwrites files and logs changed files
+ *   4. Is idempotent — running it twice produces no further changes
  */
 
 import { Rule, SchematicContext, Tree } from '@angular-devkit/schematics';
 
-interface SchemaOptions {
-  /** Dry-run pattern used by real migrations: add --dry-run support via the schema */
+/**
+ * Options accepted by the example-migration schematic.
+ */
+export interface SchemaOptions {
+  /**
+   * If true, logs what would change without modifying files in the Tree.
+   */
   dryRun?: boolean;
 }
 
+/**
+ * Pure transformation function that replaces `TestBed.get` with `TestBed.inject`.
+ *
+ * @param content Source code string
+ * @returns Transformed source code string
+ */
+export function migrateTestBedGet(content: string): string {
+  // Replace TestBed.get( with TestBed.inject(
+  return content.replace(/TestBed\.get\s*\(/g, 'TestBed.inject(');
+}
+
+/**
+ * Entry point rule for the example-migration schematic.
+ */
 export function exampleMigration(options: SchemaOptions): Rule {
   return (tree: Tree, context: SchematicContext) => {
     let changed = 0;
 
     tree.visit((filePath) => {
       if (!filePath.endsWith('.ts')) return;
+      if (filePath.includes('node_modules')) return;
+
       const buffer = tree.read(filePath);
       if (!buffer) return;
       const original = buffer.toString('utf8');
 
-      // TODO: replace with your transformation. Example shape:
-      //   const updated = transform(original);
-      //   if (updated !== original && !options.dryRun) tree.overwrite(filePath, updated);
-      const updated = original; // <-- your codemod goes here
+      const updated = migrateTestBedGet(original);
 
       if (updated !== original) {
         changed++;
-        if (!options.dryRun) tree.overwrite(filePath, updated);
+        if (!options.dryRun) {
+          tree.overwrite(filePath, updated);
+        }
         context.logger.info(`updated ${filePath}`);
       }
     });

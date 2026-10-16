@@ -5,33 +5,42 @@
  * human-readable migration guidance. Detection (`scanner.ts`) and reporting
  * (`reporter.ts`) are generic — adding a new migration rule means adding an
  * entry here, not writing new code.
- *
- * NOTE: these are EXAMPLE patterns illustrating the mechanism. Replace and
- * extend them with the real patterns from your own migrations.
  */
 
+/**
+ * Severity level for detected pattern findings.
+ * - `warning`: Code functions but uses deprecated or sub-optimal patterns.
+ * - `error`: Obsolete or removed API that will block build/upgrade.
+ */
 export type Severity = 'warning' | 'error';
 
+/**
+ * Interface representing a deprecated pattern rule.
+ */
 export interface DeprecatedPattern {
-  /** Stable id, e.g. 'ngmodule-bootstrap' */
+  /** Stable unique identifier, e.g., 'ngmodule-bootstrap' */
   id: string;
-  /** What the pattern is, in plain language */
+  /** What the pattern is, in plain human-readable language */
   description: string;
-  /** Regex source applied to file text (multiline). Keep it tight. */
+  /** Regex source pattern applied to source text */
   pattern: string;
-  /** Regex flags, default 'g' */
+  /** Regex flags, defaults to 'g' if unspecified */
   flags?: string;
   /** Angular version where the API was deprecated */
   introducedIn: string;
   /** Angular version where it is (or will be) removed, if known */
   removedIn?: string;
-  /** What to do instead — the actionable guidance */
+  /** Actionable migration guidance detailing what to replace it with */
   migration: string;
-  /** Link to official docs, if any */
+  /** Link to official Angular documentation or migration guides */
   docsUrl?: string;
+  /** Finding severity level */
   severity: Severity;
 }
 
+/**
+ * Default pattern registry containing standard Angular deprecation rules.
+ */
 export const DEPRECATED_PATTERNS: DeprecatedPattern[] = [
   {
     id: 'ngmodule-bootstrap',
@@ -40,8 +49,7 @@ export const DEPRECATED_PATTERNS: DeprecatedPattern[] = [
     pattern: 'platformBrowserDynamic\\s*\\(',
     introducedIn: '14',
     migration:
-      'Migrate to bootstrapApplication() with a standalone root component. ' +
-      'See the standalone migration schematic in src/schematics/example-migration.',
+      'Migrate to bootstrapApplication() with a standalone root component.',
     docsUrl: 'https://angular.dev/guide/upgrade-to-standalone',
     severity: 'warning',
   },
@@ -74,6 +82,38 @@ export const DEPRECATED_PATTERNS: DeprecatedPattern[] = [
     pattern: 'TestBed\\.get\\s*\\(',
     introducedIn: '9',
     migration: 'Replace TestBed.get(X) with TestBed.inject(X). The signatures are compatible.',
+    severity: 'warning',
+  },
+  {
+    id: 'component-factory-resolver',
+    description:
+      'ComponentFactoryResolver — deprecated since Angular 13; dynamic components no longer require factories',
+    pattern: 'ComponentFactoryResolver',
+    introducedIn: '13',
+    migration:
+      'Pass component class directly to ViewContainerRef.createComponent() without resolving factory.',
+    docsUrl: 'https://angular.dev/guide/components/dynamic-loading',
+    severity: 'warning',
+  },
+  {
+    id: 'reflective-injector',
+    description:
+      'ReflectiveInjector — deprecated in favor of Injector.create() or EnvironmentInjector',
+    pattern: 'ReflectiveInjector',
+    introducedIn: '5',
+    removedIn: '16',
+    migration:
+      'Use Injector.create() or EnvironmentInjector for runtime dependency injection.',
+    severity: 'error',
+  },
+  {
+    id: 'router-initial-navigation-enabled',
+    description:
+      'initialNavigation: "enabled" or true is deprecated in favor of "enabledBlocking" or "enabledNonBlocking"',
+    pattern: 'initialNavigation\\s*:\\s*(?:true|\'enabled\'|"enabled")',
+    introducedIn: '11',
+    migration:
+      'Update initialNavigation to "enabledBlocking" or "enabledNonBlocking" in ExtraOptions or withEnabledBlocking().',
     severity: 'warning',
   },
 ];
