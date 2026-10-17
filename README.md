@@ -8,9 +8,9 @@ The core idea: migrations are a **data problem** before they're a code problem. 
 
 | Piece | What it does |
 |---|---|
-| `ng-migrate scan` (CLI) | Walks a project, finds deprecated Angular APIs, prints a report. `--json` for CI, `--fail-on` to gate builds |
+| `ng-migrate scan` (CLI) | Walks a project, finds deprecated Angular APIs, prints a report. `--json` / `--sarif` for CI, `--fail-on` to gate builds |
 | `detect-deprecated` (schematic) | Same detection as an Angular schematic — run it inside a workspace, writes `migration-report.json` |
-| `example-migration` (schematic) | Template codemod to copy when building real migrations |
+| `example-migration` (schematic) | Working codemod schematic (`TestBed.get` → `TestBed.inject`) to run or copy when building migrations |
 | Pattern registry (`src/lib/patterns.ts`) | Data-driven deprecated-API rules — add a rule, get detection everywhere |
 
 ## Quickstart
@@ -22,14 +22,15 @@ npm run build
 # Scan a project (read-only)
 node dist/cli.js scan /path/to/angular-app
 
-# JSON report + fail CI on errors
-node dist/cli.js scan /path/to/angular-app --json report.json --fail-on error
+# JSON / SARIF report + fail CI on errors
+node dist/cli.js scan /path/to/angular-app --json report.json --sarif report.sarif --fail-on error
 
 # List registered patterns
 node dist/cli.js scan --list-patterns
 
 # Run the schematic inside an Angular workspace
 npx schematics ./dist/schematics/collection.json:detect-deprecated
+npx schematics ./dist/schematics/collection.json:example-migration
 ```
 
 Example output:
@@ -50,10 +51,12 @@ See [docs/architecture.md](docs/architecture.md) for the design and [docs/adding
 
 ## Roadmap
 
+- [x] Console, JSON, and SARIF reporters, `--fail-on` CI gate
+- [x] Codemod schematic template & TestBed.get codemod
+- [x] SARIF output for GitHub code scanning
 - [ ] Real codemods for the v20 → v21 migration surface
 - [ ] `ng update` integration (`ng-update/package.json` migrations)
 - [ ] Sequencing: dependency-ordered migration plans for monorepos
-- [ ] SARIF output for GitHub code scanning
 - [ ] Docs site
 
 See [docs/roadmap.md](docs/roadmap.md).
